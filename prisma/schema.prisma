@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  telegramId     String?  @unique
+  telegramChatId String?  @unique
+  name           String?
+  notifyBefore   Int      @default(0) // минут до события: 0, 5, 10
+  createdAt      DateTime @default(now())
+  shelves        Shelf[]
+  notifications  NotificationSchedule[]
+}
+
+model Shelf {
+  id        String       @id @default(cuid())
+  name      String
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  levels    ShelfLevel[]
+  createdAt DateTime     @default(now())
+}
+
+model ShelfLevel {
+  id            String       @id @default(cuid())
+  shelfId       String
+  shelf         Shelf        @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  levelNumber   Int
+  lightHeight   Float?
+  lightOnTime   String       @default("06:00")
+  lightOffTime  String       @default("22:00")
+  lightActive   Boolean      @default(false)
+  trays         Tray[]
+}
+
+model Tray {
+  id         String     @id @default(cuid())
+  levelId    String
+  level      ShelfLevel @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  position   Int
+  containers Container[]
+  createdAt  DateTime   @default(now())
+}
+
+model Container {
+  id                String       @id @default(cuid())
+  trayId            String
+  tray              Tray         @relation(fields: [trayId], references: [id], onDelete: Cascade)
+  position          Int
+  speciesId         String?
+  species           Species?     @relation(fields: [speciesId], references: [id])
+  stage             String       @default("EMPTY")
+  plantedAt         DateTime?
+  darkPhaseStarted  DateTime?
+  lightPhaseStarted DateTime?
+  harvestedAt       DateTime?
+  notes             String?
+  logs              GrowthLog[]
+  notifications     NotificationSchedule[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model Species {
+  id             String      @id @default(cuid())
+  name           String
+  variety        String?
+  color          String      @default("#4ADE80")
+  seedAmount     Float
+  soakHours      Float?
+  pressWeight    Float
+  darkDaysMin    Int
+  darkDaysMax    Int
+  lightDaysMin   Int
+  lightDaysMax   Int
+  tempMin        Float
+  tempMax        Float
+  humidityMin    Float
+  humidityMax    Float
+  heightMin      Float
+  heightMax      Float
+  overgrownHeight Float
+  lightHeight    Float?
+  steps          String      // JSON array of step objects
+  readySigns     String      // JSON array of strings
+  overgrownSigns String      // JSON array of strings
+  containers     Container[]
+  createdAt      DateTime    @default(now())
+}
+
+model GrowthLog {
+  id          String    @id @default(cuid())
+  containerId String
+  container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
+  action      String
+  notes       String?
+  stage       String
+  createdAt   DateTime  @default(now())
+}
+
+model NotificationSchedule {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  containerId String?
+  container   Container? @relation(fields: [containerId], references: [id])
+  type        String
+  message     String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+}
