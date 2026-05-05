@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Droplets, Sun, Scissors, ClipboardList, ChevronRight } from "lucide-react";
+import { X, Droplets, ClipboardList, ChevronRight, Trash2 } from "lucide-react";
 import { STAGE_LABELS, GrowthStage, daysSince, formatDate } from "@/lib/utils";
 import { EmojiPicker } from "./EmojiPicker";
 import Link from "next/link";
@@ -38,6 +38,7 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
   const [selectedSpecies, setSelectedSpecies] = useState(container.species?.id ?? "");
   const [emoji, setEmoji] = useState(container.emoji ?? "");
   const [notes, setNotes] = useState(container.notes ?? "");
+  const [eventAt, setEventAt] = useState(toDateTimeLocal(new Date()));
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<"info" | "log">("info");
 
@@ -66,7 +67,10 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
       await fetch(`/api/containers/${container.id}/advance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ speciesId: selectedSpecies || undefined }),
+        body: JSON.stringify({
+          speciesId: selectedSpecies || undefined,
+          eventAt: stage === "EMPTY" ? new Date(eventAt).toISOString() : undefined,
+        }),
       });
       // Save emoji+notes too
       if (emoji || notes) {
@@ -92,12 +96,19 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
   }
 
   async function clear() {
-    if (!confirm("Очистить контейнер? Все данные будут удалены.")) return;
+    if (!confirm("Очистить контейнер? Посев сохранится в истории.")) return;
     await fetch(`/api/containers/${container.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ stage: "EMPTY", speciesId: null, notes: null, emoji: null, plantedAt: null }),
     });
+    onUpdate();
+    onClose();
+  }
+
+  async function deleteContainer() {
+    if (!confirm("Удалить контейнер? Активный посев сохранится в истории.")) return;
+    await fetch(`/api/containers/${container.id}`, { method: "DELETE" });
     onUpdate();
     onClose();
   }
@@ -182,6 +193,21 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
                 </div>
               )}
 
+              {stage === "EMPTY" && selectedSpecies && (
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
+                    Дата и время посева
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={eventAt}
+                    onChange={(e) => setEventAt(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-sm"
+                    style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+                  />
+                </div>
+              )}
+
               {/* Notes */}
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
@@ -239,7 +265,7 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
 
             {/* Advance */}
             {nextLabel && (
-              <button onClick={advance} disabled={loading || (stage === "EMPTY" && !selectedSpecies)}
+              <button onClick={advance} disabled={loading || (stage === "EMPTY" && (!selectedSpecies || !eventAt))}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium disabled:opacity-40 transition-all"
                 style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}44` }}>
                 {loading ? "..." : nextLabel}
@@ -248,17 +274,30 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
           </div>
 
           {/* Clear */}
-          {stage !== "EMPTY" && (
-            <button onClick={clear}
+          <div className="grid grid-cols-2 gap-2">
+            {stage !== "EMPTY" && (
+              <button onClick={clear}
               className="w-full py-1.5 rounded-xl text-xs transition-colors hover:bg-red-500/8"
               style={{ color: "#EF444488", border: "1px solid rgba(239,68,68,0.15)" }}>
-              Очистить контейнер
+                Очистить
+              </button>
+            )}
+            <button onClick={deleteContainer}
+              className="w-full py-1.5 rounded-xl text-xs transition-colors hover:bg-red-500/8 flex items-center justify-center gap-1.5"
+              style={{ color: "#EF4444AA", border: "1px solid rgba(239,68,68,0.15)" }}>
+              <Trash2 size={12} /> Удалить
             </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+function toDateTimeLocal(date: Date) {
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
 }
 
 function DateRow({ icon, label, date }: { icon: string; label: string; date: Date }) {

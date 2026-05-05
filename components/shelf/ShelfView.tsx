@@ -56,6 +56,18 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
     window.location.reload();
   }
 
+  async function deleteLevel(levelId: string) {
+    if (!confirm("Удалить этаж? Активные посевы сохранятся в истории.")) return;
+    await fetch(`/api/levels/${levelId}`, { method: "DELETE" });
+    window.location.reload();
+  }
+
+  async function deleteTray(trayId: string) {
+    if (!confirm("Удалить поднос? Активные посевы сохранятся в истории.")) return;
+    await fetch(`/api/trays/${trayId}`, { method: "DELETE" });
+    window.location.reload();
+  }
+
   return (
     <div className="space-y-4">
       {/* Shelf frame */}
@@ -103,6 +115,14 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
                   {level.lightActive ? <Sun size={12} /> : <Moon size={12} />}
                   {level.lightActive ? "Свет ВКЛ" : "Свет ВЫКЛ"}
                 </button>
+                <button
+                  onClick={() => deleteLevel(level.id)}
+                  className="p-1.5 rounded-lg transition-colors hover:bg-red-500/10"
+                  style={{ color: "#EF444499", border: "1px solid rgba(239,68,68,0.14)" }}
+                  title="Удалить этаж"
+                >
+                  <Trash2 size={13} />
+                </button>
               </div>
             </div>
 
@@ -111,9 +131,18 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
               <div className="flex gap-4">
                 {level.trays.map((tray) => (
                   <div key={tray.id} className="flex-1 min-w-0">
-                    <div className="text-xs mb-2 text-center"
-                      style={{ color: "var(--text-muted)" }}>
-                      Поднос {tray.position}
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        Поднос {tray.position}
+                      </div>
+                      <button
+                        onClick={() => deleteTray(tray.id)}
+                        className="p-1 rounded-md transition-colors hover:bg-red-500/10"
+                        style={{ color: "#EF444488" }}
+                        title="Удалить поднос"
+                      >
+                        <Trash2 size={11} />
+                      </button>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
                       {tray.containers.map((container) => (

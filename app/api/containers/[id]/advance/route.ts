@@ -5,7 +5,7 @@ import { scheduleNotification, buildStageChangeMessage, buildHarvestMessage } fr
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { speciesId } = await req.json().catch(() => ({}));
+  const { speciesId, eventAt } = await req.json().catch(() => ({}));
 
   const container = await prisma.container.findUnique({
     where: { id },
@@ -23,7 +23,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const next = STAGE_ORDER[idx + 1];
-  const now = new Date();
+  const now = eventAt ? new Date(eventAt) : new Date();
+
+  if (Number.isNaN(now.getTime())) {
+    return NextResponse.json({ error: "Invalid eventAt" }, { status: 400 });
+  }
 
   // Build update data
   const updateData: Record<string, unknown> = { stage: next };
@@ -44,7 +48,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     updateData.harvestedAt = now;
   }
 
-  await prisma.container.update({ where: { id }, data: updateData });
+  const updatedContainer = await prisma.container.update({
+    where: { id },
+    data: updateData,
+    include: { species: true },
+  });
 
   // Log the stage change
   await prisma.growthLog.create({
@@ -58,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Schedule notifications
   const user = await prisma.user.findFirst();
   if (user) {
-    const speciesName = container.species?.name ?? "Растение";
+    const speciesName = updatedContainer.species?.name ?? container.species?.name ?? "Растение";
     const shelfName = container.tray.level.shelf.name;
     const levelNum = container.tray.level.levelNumber;
 
@@ -79,7 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
 
       // Harvest alert at min days
-      const species = container.species;
+      const species = updatedContainer.species ?? container.species;
       if (species) {
         const harvestAt = new Date(now.getTime() + species.lightDaysMin * 24 * 60 * 60 * 1000);
         const harvestMsg = buildHarvestMessage(speciesName, `${shelfName} / эт.${levelNum}`);

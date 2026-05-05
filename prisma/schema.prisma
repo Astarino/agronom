@@ -17,6 +17,7 @@ model User {
   createdAt      DateTime @default(now())
   shelves        Shelf[]
   notifications  NotificationSchedule[]
+  cropHistory     CropHistory[]
 }
 
 model Shelf {
@@ -104,6 +105,27 @@ model GrowthLog {
   notes       String?
   stage       String
   createdAt   DateTime  @default(now())
+}
+
+model CropHistory {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  containerId       String?
+  speciesId         String?
+  speciesName       String
+  shelfName         String
+  levelNumber       Int
+  trayPosition      Int
+  containerPosition Int
+  plantedAt         DateTime?
+  darkPhaseStarted  DateTime?
+  lightPhaseStarted DateTime?
+  harvestedAt       DateTime?
+  clearedAt         DateTime @default(now())
+  finalStage        String
+  notes             String?
+  createdAt         DateTime @default(now())
 }
 
 model NotificationSchedule {

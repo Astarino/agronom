@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Layers, Leaf, Bell, Settings } from "lucide-react";
+import { LayoutDashboard, Layers, Leaf, Archive, Settings } from "lucide-react";
 
 const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Главная" },
   { href: "/shelves", icon: Layers, label: "Стеллажи" },
   { href: "/species", icon: Leaf, label: "Виды" },
-  { href: "/notifications", icon: Bell, label: "Уведомл." },
+  { href: "/history", icon: Archive, label: "История" },
   { href: "/settings", icon: Settings, label: "Настройки" },
 ];
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { archiveContainerCycle } from "@/lib/history";
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,6 +22,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // Clear datetime fields if stage reset to EMPTY
   if (data.stage === "EMPTY") {
+    await archiveContainerCycle(id);
+    await prisma.notificationSchedule.updateMany({
+      where: { containerId: id, sentAt: null },
+      data: { isActive: false },
+    });
     data.plantedAt = null;
     data.darkPhaseStarted = null;
     data.lightPhaseStarted = null;
@@ -34,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  await archiveContainerCycle(id);
   await prisma.container.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

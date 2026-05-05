@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Layers, Leaf, Bell, Settings, Sprout, MessageCircle, ExternalLink,
+  LayoutDashboard, Layers, Leaf, Bell, Settings, Sprout, MessageCircle, ExternalLink, Archive,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Дашборд" },
   { href: "/shelves", icon: Layers, label: "Стеллажи" },
   { href: "/species", icon: Leaf, label: "Виды" },
+  { href: "/history", icon: Archive, label: "История" },
   { href: "/notifications", icon: Bell, label: "Уведомления" },
   { href: "/settings", icon: Settings, label: "Настройки" },
 ];
