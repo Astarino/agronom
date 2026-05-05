@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import { Bell, Clock, CheckCircle2, X } from "lucide-react";
 import { NotificationsList } from "@/components/notifications/NotificationsList";

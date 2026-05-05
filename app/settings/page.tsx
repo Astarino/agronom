@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import { Settings } from "lucide-react";
 import { TelegramSettings } from "@/components/settings/TelegramSettings";

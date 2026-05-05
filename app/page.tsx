@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import { STAGE_LABELS, STAGE_GLOW, GrowthStage, daysSince, formatDate } from "@/lib/utils";
 import Link from "next/link";
