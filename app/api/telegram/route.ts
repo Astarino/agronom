@@ -36,9 +36,18 @@ export async function GET(req: NextRequest) {
 
   if (setup === "1") {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    const { setWebhook } = await import("@/lib/telegram");
-    await setWebhook(`${appUrl}/api/telegram`);
-    return NextResponse.json({ ok: true, webhook: `${appUrl}/api/telegram` });
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    if (!token) return NextResponse.json({ error: "TELEGRAM_BOT_TOKEN not set" }, { status: 500 });
+
+    const webhookUrl = `${appUrl}/api/telegram`;
+    const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: webhookUrl, secret_token: secret }),
+    });
+    const data = await res.json();
+    return NextResponse.json({ ok: data.ok, webhook: webhookUrl, telegram: data });
   }
 
   return NextResponse.json({ ok: true, info: "Telegram webhook endpoint" });
