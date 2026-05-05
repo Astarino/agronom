@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 type Species = { id: string; name: string; color: string; variety: string | null };
 
 type ContainerData = {
-  id: string; position: number; stage: string; species: Species | null;
+  id: string; position: number; stage: string; emoji: string | null; species: Species | null;
   plantedAt: Date | null; darkPhaseStarted: Date | null;
   lightPhaseStarted: Date | null; harvestedAt: Date | null; notes: string | null;
 };

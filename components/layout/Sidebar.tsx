@@ -3,12 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Layers,
-  Leaf,
-  Bell,
-  Settings,
-  Sprout,
+  LayoutDashboard, Layers, Leaf, Bell, Settings, Sprout, MessageCircle, ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,10 +21,11 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col z-40"
       style={{ background: "var(--surface)", borderRight: "1px solid var(--border)" }}>
+
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b" style={{ borderColor: "var(--border)" }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.3)" }}>
+          style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.25)" }}>
           <Sprout className="w-5 h-5" style={{ color: "var(--green-sprout)" }} />
         </div>
         <div>
@@ -45,32 +41,36 @@ export function Sidebar() {
         {navItems.map(({ href, icon: Icon, label }) => {
           const active = pathname === href || (href !== "/" && pathname.startsWith(href));
           return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                active
-                  ? "text-[var(--green-sprout)]"
-                  : "hover:text-[var(--text-primary)]"
-              )}
+            <Link key={href} href={href}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
               style={{
                 background: active ? "rgba(74,222,128,0.1)" : "transparent",
                 color: active ? "var(--green-sprout)" : "var(--text-secondary)",
                 border: active ? "1px solid rgba(74,222,128,0.2)" : "1px solid transparent",
-              }}
-            >
-              <Icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: 18, height: 18 }} />
+              }}>
+              <Icon style={{ width: 17, height: 17, flexShrink: 0 }} />
               {label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-6 py-4 border-t text-xs" style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}>
-        <div>Свет: 16ч вкл / 8ч выкл</div>
-        <div className="mt-1">Темп: 20–23°C</div>
+      {/* Telegram bot */}
+      <div className="px-3 pb-3">
+        <a href="https://t.me/agronomvubot" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-90 w-full"
+          style={{ background: "rgba(96,165,250,0.1)", color: "#60A5FA", border: "1px solid rgba(96,165,250,0.2)" }}>
+          <MessageCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+          <span className="flex-1">@agronomvubot</span>
+          <ExternalLink style={{ width: 12, height: 12, opacity: 0.6 }} />
+        </a>
+      </div>
+
+      {/* Footer hint */}
+      <div className="px-5 py-3 border-t text-xs space-y-0.5"
+        style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}>
+        <div>☀️ Свет: 16 ч / 🌙 Темнота: 8 ч</div>
+        <div>🌡 Температура: 20–23°C</div>
       </div>
     </aside>
   );

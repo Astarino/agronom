@@ -1,32 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { X, ArrowRight, Droplets, Sun, Scissors, Trash2, ClipboardList } from "lucide-react";
+import { X, Droplets, Sun, Scissors, ClipboardList, ChevronRight } from "lucide-react";
 import { STAGE_LABELS, GrowthStage, daysSince, formatDate } from "@/lib/utils";
+import { EmojiPicker } from "./EmojiPicker";
 import Link from "next/link";
 
 type Species = { id: string; name: string; color: string; variety: string | null };
 
 type ContainerData = {
-  id: string; position: number; stage: string; species: Species | null;
+  id: string; position: number; stage: string; emoji: string | null;
+  species: Species | null;
   plantedAt: Date | null; darkPhaseStarted: Date | null;
   lightPhaseStarted: Date | null; harvestedAt: Date | null; notes: string | null;
 };
 
-const NEXT_STAGE_LABELS: Partial<Record<GrowthStage, string>> = {
+const STAGE_NEXT_LABEL: Partial<Record<GrowthStage, string>> = {
   EMPTY: "Начать посев",
   PREPARATION: "В тёмную фазу",
   DARK_PHASE: "Под свет",
   LIGHT_PHASE: "Отметить готовым",
-  READY: "Убрано / Собрано",
+  READY: "Собрано — очистить",
 };
 
-const STAGE_ICONS: Partial<Record<GrowthStage, React.ReactNode>> = {
-  EMPTY: <ArrowRight size={14} />,
-  PREPARATION: <ArrowRight size={14} />,
-  DARK_PHASE: <Sun size={14} />,
-  LIGHT_PHASE: <ArrowRight size={14} />,
-  READY: <Scissors size={14} />,
+const STAGE_ACCENT: Record<string, string> = {
+  EMPTY: "#4A6B4E", PREPARATION: "#A78BFA", DARK_PHASE: "#C4B5FD",
+  LIGHT_PHASE: "#4ADE80", READY: "#FCD34D", HARVESTED: "#4A6B4E",
 };
 
 export function ContainerModal({ container, species, shelfName, onClose, onUpdate }: {
@@ -37,16 +36,31 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
   onUpdate: () => void;
 }) {
   const [selectedSpecies, setSelectedSpecies] = useState(container.species?.id ?? "");
+  const [emoji, setEmoji] = useState(container.emoji ?? "");
   const [notes, setNotes] = useState(container.notes ?? "");
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<"info" | "log">("info");
 
   const stage = container.stage as GrowthStage;
   const days = container.plantedAt ? daysSince(container.plantedAt) : null;
-  const nextLabel = NEXT_STAGE_LABELS[stage];
-  const nextIcon = STAGE_ICONS[stage];
+  const accent = STAGE_ACCENT[stage] ?? "#4A6B4E";
+  const nextLabel = STAGE_NEXT_LABEL[stage];
 
-  async function advanceStage() {
+  async function save() {
+    await fetch(`/api/containers/${container.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        notes: notes || null,
+        emoji: emoji || null,
+        speciesId: selectedSpecies || null,
+      }),
+    });
+    onUpdate();
+    onClose();
+  }
+
+  async function advance() {
     setLoading(true);
     try {
       await fetch(`/api/containers/${container.id}/advance`, {
@@ -54,21 +68,19 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ speciesId: selectedSpecies || undefined }),
       });
+      // Save emoji+notes too
+      if (emoji || notes) {
+        await fetch(`/api/containers/${container.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emoji: emoji || null, notes: notes || null }),
+        });
+      }
       onUpdate();
       onClose();
     } finally {
       setLoading(false);
     }
-  }
-
-  async function saveNotes() {
-    await fetch(`/api/containers/${container.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes, speciesId: selectedSpecies || null }),
-    });
-    onUpdate();
-    onClose();
   }
 
   async function logWatering() {
@@ -77,64 +89,53 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "Полив", stage }),
     });
-    onUpdate();
   }
 
-  async function clearContainer() {
-    if (!confirm("Очистить контейнер?")) return;
+  async function clear() {
+    if (!confirm("Очистить контейнер? Все данные будут удалены.")) return;
     await fetch(`/api/containers/${container.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stage: "EMPTY", speciesId: null, notes: null, plantedAt: null }),
+      body: JSON.stringify({ stage: "EMPTY", speciesId: null, notes: null, emoji: null, plantedAt: null }),
     });
     onUpdate();
     onClose();
   }
 
-  const stageColor = {
-    EMPTY: "#4A6B4E", PREPARATION: "#A78BFA", DARK_PHASE: "#C4B5FD",
-    LIGHT_PHASE: "#4ADE80", READY: "#FCD34D", HARVESTED: "#4A6B4E",
-  }[stage] ?? "#4A6B4E";
-
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: "rgba(7,15,9,0.85)", backdropFilter: "blur(8px)" }}
+      style={{ background: "rgba(4,10,5,0.88)", backdropFilter: "blur(10px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
 
-      <div className="w-full max-w-sm rounded-2xl overflow-hidden animate-sprout"
-        style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+      <div className="w-full max-w-sm rounded-2xl overflow-hidden"
+        style={{ background: "var(--card)", border: `1px solid ${accent}33` }}>
 
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b"
-          style={{ borderColor: "var(--border)" }}>
-          <div className="flex items-center gap-3">
-            {container.species && (
-              <div className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ background: container.species.color }} />
-            )}
-            <div>
-              <div className="font-display font-semibold" style={{ color: "var(--text-primary)" }}>
-                {container.species?.name ?? "Свободный контейнер"}
-              </div>
-              <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {shelfName} · Позиция {container.position}
-                {days !== null && ` · День ${days}`}
-              </div>
+        <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: "var(--border)" }}>
+          {/* Emoji pick inline */}
+          {stage !== "EMPTY" && (
+            <EmojiPicker value={emoji} onChange={setEmoji} />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold truncate" style={{ color: "var(--text-primary)" }}>
+              {container.species?.name ?? "Свободный контейнер"}
+            </div>
+            <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+              {shelfName} · поз. {container.position}
+              {days !== null && <> · <span className="font-mono">день {days}</span></>}
             </div>
           </div>
-          <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+
+          {/* Stage badge */}
+          <span className="text-xs px-2 py-1 rounded-full flex-shrink-0"
+            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}44` }}>
+            {STAGE_LABELS[stage]}
+          </span>
+
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/5 flex-shrink-0"
             style={{ color: "var(--text-muted)" }}>
             <X size={16} />
           </button>
-        </div>
-
-        {/* Stage badge */}
-        <div className="px-4 pt-3 pb-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
-            style={{ background: `${stageColor}22`, color: stageColor, border: `1px solid ${stageColor}44` }}>
-            {STAGE_LABELS[stage]}
-          </span>
         </div>
 
         {/* Tabs */}
@@ -143,32 +144,26 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
             <button key={t} onClick={() => setTab(t)}
               className="px-3 py-2 text-xs font-medium border-b-2 transition-colors"
               style={{
-                borderColor: tab === t ? "var(--green-sprout)" : "transparent",
-                color: tab === t ? "var(--green-sprout)" : "var(--text-muted)",
+                borderColor: tab === t ? accent : "transparent",
+                color: tab === t ? accent : "var(--text-muted)",
               }}>
               {t === "info" ? "Информация" : "Журнал"}
             </button>
           ))}
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {tab === "info" ? (
             <>
-              {/* Species selector */}
+              {/* Species selector (only when empty) */}
               {stage === "EMPTY" && (
                 <div>
-                  <label className="block text-xs font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
                     Вид растения
                   </label>
-                  <select
-                    value={selectedSpecies}
-                    onChange={(e) => setSelectedSpecies(e.target.value)}
+                  <select value={selectedSpecies} onChange={(e) => setSelectedSpecies(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-sm"
-                    style={{
-                      background: "var(--surface)", border: "1px solid var(--border)",
-                      color: "var(--text-primary)",
-                    }}
-                  >
+                    style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)" }}>
                     <option value="">— Выберите вид —</option>
                     {species.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
@@ -177,86 +172,87 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
                 </div>
               )}
 
-              {/* Notes */}
-              <div>
-                <label className="block text-xs font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
-                  Заметки
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={2}
-                  placeholder="Добавьте заметки..."
-                  className="w-full px-3 py-2 rounded-xl text-sm resize-none"
-                  style={{
-                    background: "var(--surface)", border: "1px solid var(--border)",
-                    color: "var(--text-primary)",
-                  }}
-                />
-              </div>
-
-              {/* Dates */}
-              {container.plantedAt && (
-                <div className="text-xs space-y-1" style={{ color: "var(--text-muted)" }}>
-                  <div>🌱 Посеяно: {formatDate(container.plantedAt)}</div>
-                  {container.darkPhaseStarted && <div>🌑 Тёмная фаза: {formatDate(container.darkPhaseStarted)}</div>}
-                  {container.lightPhaseStarted && <div>☀️ Под светом: {formatDate(container.lightPhaseStarted)}</div>}
+              {/* Emoji picker (when empty, show in body) */}
+              {stage === "EMPTY" && selectedSpecies && (
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
+                    Эмодзи контейнера
+                  </label>
+                  <EmojiPicker value={emoji} onChange={setEmoji} />
                 </div>
               )}
 
-              {/* Species instructions link */}
+              {/* Notes */}
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
+                  Заметки
+                </label>
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+                  rows={2} placeholder="Например: семена из новой партии, меньше воды..."
+                  className="w-full px-3 py-2 rounded-xl text-sm resize-none"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
+                />
+              </div>
+
+              {/* Timeline */}
+              {container.plantedAt && (
+                <div className="rounded-xl p-3 space-y-1.5"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                  {container.plantedAt && <DateRow icon="🌱" label="Посеяно" date={container.plantedAt} />}
+                  {container.darkPhaseStarted && <DateRow icon="🌑" label="Тёмная фаза" date={container.darkPhaseStarted} />}
+                  {container.lightPhaseStarted && <DateRow icon="☀️" label="Под светом" date={container.lightPhaseStarted} />}
+                </div>
+              )}
+
+              {/* Link to species */}
               {container.species && (
-                <Link href={`/species/${container.species.id}`}
-                  className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl transition-colors hover:bg-white/5"
-                  style={{ color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                <Link href={`/species/${container.species.id}`} onClick={onClose}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors hover:bg-white/5"
+                  style={{ color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.18)" }}>
                   <ClipboardList size={12} />
-                  Смотреть инструкцию для {container.species.name}
+                  Инструкция: {container.species.name}
+                  <ChevronRight size={12} className="ml-auto" />
                 </Link>
               )}
             </>
           ) : (
-            <ContainerLogTab containerId={container.id} />
+            <LogTab containerId={container.id} />
           )}
 
-          {/* Actions */}
+          {/* Action buttons */}
           <div className="flex gap-2 pt-1">
-            {stage !== "EMPTY" && stage !== "HARVESTED" && (
-              <button
-                onClick={logWatering}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors"
-                style={{ background: "rgba(74,222,128,0.1)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.2)" }}>
+            {/* Watering */}
+            {!["EMPTY", "HARVESTED"].includes(stage) && (
+              <button onClick={logWatering}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium"
+                style={{ background: "rgba(74,222,128,0.08)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.2)" }}>
                 <Droplets size={12} /> Полив
               </button>
             )}
 
-            <button onClick={saveNotes}
+            {/* Save */}
+            <button onClick={save}
               className="flex-1 py-2 rounded-xl text-xs font-medium transition-colors"
               style={{ background: "var(--surface)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
               Сохранить
             </button>
 
+            {/* Advance */}
             {nextLabel && (
-              <button
-                onClick={advanceStage}
-                disabled={loading || (stage === "EMPTY" && !selectedSpecies)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all disabled:opacity-50"
-                style={{
-                  background: stage === "READY" ? "rgba(252,211,77,0.15)" : "rgba(74,222,128,0.15)",
-                  color: stage === "READY" ? "#FCD34D" : "var(--green-sprout)",
-                  border: `1px solid ${stage === "READY" ? "rgba(252,211,77,0.3)" : "rgba(74,222,128,0.3)"}`,
-                }}>
-                {nextIcon}
-                {nextLabel}
+              <button onClick={advance} disabled={loading || (stage === "EMPTY" && !selectedSpecies)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium disabled:opacity-40 transition-all"
+                style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}44` }}>
+                {loading ? "..." : nextLabel}
               </button>
             )}
           </div>
 
           {/* Clear */}
           {stage !== "EMPTY" && (
-            <button onClick={clearContainer}
-              className="w-full py-1.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors hover:bg-red-500/10"
-              style={{ color: "#EF4444", border: "1px solid rgba(239,68,68,0.2)" }}>
-              <Trash2 size={12} /> Очистить контейнер
+            <button onClick={clear}
+              className="w-full py-1.5 rounded-xl text-xs transition-colors hover:bg-red-500/8"
+              style={{ color: "#EF444488", border: "1px solid rgba(239,68,68,0.15)" }}>
+              Очистить контейнер
             </button>
           )}
         </div>
@@ -265,26 +261,31 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
   );
 }
 
-function ContainerLogTab({ containerId }: { containerId: string }) {
-  const [logs, setLogs] = useState<Array<{ id: string; action: string; createdAt: Date; notes: string | null }>>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  if (!loaded) {
-    fetch(`/api/containers/${containerId}/log`)
-      .then((r) => r.json())
-      .then((data) => { setLogs(data); setLoaded(true); });
-    return <div className="text-xs text-center py-4" style={{ color: "var(--text-muted)" }}>Загрузка...</div>;
-  }
-
-  if (logs.length === 0) {
-    return <div className="text-xs text-center py-4" style={{ color: "var(--text-muted)" }}>Нет записей в журнале</div>;
-  }
-
+function DateRow({ icon, label, date }: { icon: string; label: string; date: Date }) {
   return (
-    <div className="space-y-2 max-h-48 overflow-y-auto">
+    <div className="flex items-center gap-2 text-xs">
+      <span>{icon}</span>
+      <span style={{ color: "var(--text-muted)" }}>{label}:</span>
+      <span className="font-mono" style={{ color: "var(--text-secondary)" }}>{formatDate(date)}</span>
+    </div>
+  );
+}
+
+function LogTab({ containerId }: { containerId: string }) {
+  const [logs, setLogs] = useState<Array<{ id: string; action: string; createdAt: Date; notes: string | null }> | null>(null);
+
+  if (!logs) {
+    fetch(`/api/containers/${containerId}/log`).then((r) => r.json()).then(setLogs);
+    return <p className="text-xs text-center py-4" style={{ color: "var(--text-muted)" }}>Загрузка...</p>;
+  }
+  if (logs.length === 0) {
+    return <p className="text-xs text-center py-4" style={{ color: "var(--text-muted)" }}>Нет записей</p>;
+  }
+  return (
+    <div className="space-y-2 max-h-44 overflow-y-auto">
       {logs.map((log) => (
         <div key={log.id} className="flex gap-2 text-xs">
-          <span className="w-20 flex-shrink-0 font-mono" style={{ color: "var(--text-muted)" }}>
+          <span className="font-mono w-16 flex-shrink-0" style={{ color: "var(--text-muted)" }}>
             {new Date(log.createdAt).toLocaleDateString("ru", { day: "numeric", month: "short" })}
           </span>
           <span style={{ color: "var(--text-secondary)" }}>{log.action}</span>

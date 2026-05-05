@@ -60,6 +60,7 @@ model Container {
   darkPhaseStarted  DateTime?
   lightPhaseStarted DateTime?
   harvestedAt       DateTime?
+  emoji             String?
   notes             String?
   logs              GrowthLog[]
   notifications     NotificationSchedule[]
