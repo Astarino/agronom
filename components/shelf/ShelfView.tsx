@@ -37,6 +37,8 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkPlantOpen, setBulkPlantOpen] = useState(false);
   const [toast, setToast] = useState("");
+  // Optimistic light state so the lamp "turns on" instantly on tap.
+  const [lightOverride, setLightOverride] = useState<Record<string, boolean>>({});
 
   const allContainers = shelf.levels.flatMap((level) => level.trays.flatMap((tray) => tray.containers));
   const emptyContainers = allContainers.filter((container) => container.stage === "EMPTY");
@@ -99,12 +101,16 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
   }
 
   async function toggleLight(levelId: string, current: boolean) {
-    await fetch(`/api/levels/${levelId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lightActive: !current }),
-    });
-    router.refresh();
+    setLightOverride((map) => ({ ...map, [levelId]: !current }));
+    try {
+      await fetch(`/api/levels/${levelId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lightActive: !current }),
+      });
+    } finally {
+      router.refresh();
+    }
   }
 
   async function addTray(levelId: string) {
@@ -176,12 +182,30 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
       </div>
 
       <div className="ui-card overflow-hidden">
-        {shelf.levels.map((level, li) => (
+        {shelf.levels.map((level, li) => {
+          const lit = lightOverride[level.id] ?? level.lightActive;
+          return (
           <div key={level.id}
-            className={cn("relative", li < shelf.levels.length - 1 && "border-b")}
+            className={cn("relative overflow-hidden", li < shelf.levels.length - 1 && "border-b")}
             style={{ borderColor: "var(--border)" }}>
 
-            <div className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            {/* Grow-light backlight — warm glow that fades in when light is on */}
+            <div aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 z-0 transition-opacity duration-700 ease-out"
+              style={{
+                height: "78%",
+                opacity: lit ? 1 : 0,
+                background: "radial-gradient(125% 88% at 50% 0%, rgba(255,226,170,.16), rgba(255,214,150,.045) 46%, transparent 72%)",
+              }} />
+            <div aria-hidden
+              className="pointer-events-none absolute inset-x-5 top-0 z-0 h-[3px] rounded-b-full transition-all duration-700 ease-out"
+              style={{
+                opacity: lit ? 1 : 0,
+                background: "linear-gradient(90deg, transparent, #ffe6a8 28%, #fff3d2 50%, #ffe6a8 72%, transparent)",
+                boxShadow: lit ? "0 0 14px 2px rgba(255,226,170,.5)" : "none",
+              }} />
+
+            <div className="relative z-10 flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               style={{ background: "rgba(255,255,255,.012)", borderColor: "var(--border)" }}>
               <div className="flex items-center gap-2.5">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg font-mono text-xs font-bold"
@@ -212,16 +236,18 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
                   {level.lightOnTime}–{level.lightOffTime}
                 </span>
                 <button
-                  onClick={() => toggleLight(level.id, level.lightActive)}
+                  onClick={() => toggleLight(level.id, lit)}
+                  aria-pressed={lit}
                   className={cn(
-                    "flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-1 text-xs font-semibold transition-colors",
-                    level.lightActive
-                      ? "border-[#d4b878]/25 bg-[#d4b878]/12 text-[#d9c08a]"
+                    "flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-1 text-xs font-semibold transition-all duration-300",
+                    lit
+                      ? "border-[#d4b878]/35 bg-[#d4b878]/15 text-[#e6cd96]"
                       : "border-white/10 bg-white/[0.025] text-slate-400 hover:border-[#d4b878]/25"
                   )}
+                  style={lit ? { boxShadow: "0 0 12px rgba(255,226,170,.28)" } : undefined}
                 >
-                  {level.lightActive ? <Sun size={12} /> : <Moon size={12} />}
-                  {level.lightActive ? "Свет ВКЛ" : "Свет ВЫКЛ"}
+                  {lit ? <Sun size={12} /> : <Moon size={12} />}
+                  {lit ? "Свет ВКЛ" : "Свет ВЫКЛ"}
                 </button>
                 <button
                   onClick={() => deleteLevel(level.id)}
@@ -234,7 +260,8 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
               </div>
             </div>
 
-            <div className="p-3 sm:p-4">
+            <div className="relative z-10 p-3 transition-[filter] duration-700 ease-out sm:p-4"
+              style={{ filter: lit ? "brightness(1.05)" : "none" }}>
               <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0">
                 {level.trays.map((tray) => (
                   <div key={tray.id} className="min-w-[250px] snap-start rounded-xl border p-3 sm:min-w-0"
@@ -293,7 +320,8 @@ export function ShelfView({ shelf, species }: { shelf: ShelfData; species: Speci
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {!selectionMode && <button
