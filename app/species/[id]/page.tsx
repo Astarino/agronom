@@ -49,7 +49,7 @@ export default async function SpeciesDetailPage({ params }: { params: Promise<{ 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <ParamCard icon={<Thermometer size={16} />} label="Температура" value={`${species.tempMin}–${species.tempMax}°C`} color="#60A5FA" />
         <ParamCard icon={<Droplets size={16} />} label="Влажность" value={`${species.humidityMin}–${species.humidityMax}%`} color="#34D399" />
-        <ParamCard icon={<Clock size={16} />} label="Время роста" value={`${totalDaysMin}–${totalDaysMax} дн`} color="#A78BFA" />
+        <ParamCard icon={<Clock size={16} />} label="Время роста" value={`${totalDaysMin}–${totalDaysMax} дн`} color="#9a93b8" />
         <ParamCard icon={<Ruler size={16} />} label="Высота" value={`${species.heightMin}–${species.heightMax} см`} color={species.color} />
       </div>
 
@@ -68,9 +68,9 @@ export default async function SpeciesDetailPage({ params }: { params: Promise<{ 
       {/* Light schedule */}
       <div className="p-4 rounded-2xl mb-6 flex items-center gap-4"
         style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
-        <Sun size={20} style={{ color: "#FCD34D" }} className="flex-shrink-0" />
+        <Sun size={20} style={{ color: "#e0c98a" }} className="flex-shrink-0" />
         <div>
-          <p className="text-sm font-medium" style={{ color: "#FCD34D" }}>Световой режим</p>
+          <p className="text-sm font-medium" style={{ color: "#e0c98a" }}>Световой режим</p>
           <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
             Свет — <strong>16 часов</strong> / Темнота — <strong>8 часов</strong>
           </p>
@@ -85,10 +85,10 @@ export default async function SpeciesDetailPage({ params }: { params: Promise<{ 
         <div className="space-y-3">
           {steps.map((step, i) => {
             const phaseColors: Record<string, { bg: string; color: string; label: string }> = {
-              PREPARATION: { bg: "rgba(124,58,237,0.1)", color: "#A78BFA", label: "Подготовка" },
-              DARK_PHASE:  { bg: "rgba(139,92,246,0.1)", color: "#C4B5FD", label: "Тёмная фаза" },
-              LIGHT_PHASE: { bg: "rgba(74,222,128,0.1)", color: "#4ADE80", label: "Под светом" },
-              READY:       { bg: "rgba(252,211,77,0.1)", color: "#FCD34D", label: "Готово" },
+              PREPARATION: { bg: "rgba(124,58,237,0.1)", color: "#9a93b8", label: "Подготовка" },
+              DARK_PHASE:  { bg: "rgba(139,92,246,0.1)", color: "#aaa4c4", label: "Тёмная фаза" },
+              LIGHT_PHASE: { bg: "rgba(135, 189, 156,0.1)", color: "#87bd9c", label: "Под светом" },
+              READY:       { bg: "rgba(224, 201, 138,0.1)", color: "#e0c98a", label: "Готово" },
             };
             const phaseStyle = step.phase ? phaseColors[step.phase] : null;
 
@@ -135,9 +135,9 @@ export default async function SpeciesDetailPage({ params }: { params: Promise<{ 
           title="Признаки готовности"
           signs={readySigns}
           icon={<CheckCircle2 size={16} />}
-          color="#4ADE80"
-          bg="rgba(74,222,128,0.08)"
-          border="rgba(74,222,128,0.2)"
+          color="#87bd9c"
+          bg="rgba(135, 189, 156,0.08)"
+          border="rgba(135, 189, 156,0.2)"
         />
         <SignsCard
           title="Признаки перерастания"

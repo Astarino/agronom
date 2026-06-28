@@ -1,19 +1,20 @@
 export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import { Layers, Plus, ChevronRight } from "lucide-react";
+import { ArrowRight, Layers3, Sprout } from "lucide-react";
 import { AddShelfButton } from "@/components/shelf/AddShelfButton";
 
 async function getShelves() {
   return prisma.shelf.findMany({
     include: {
       levels: {
+        orderBy: { levelNumber: "asc" },
         include: {
           trays: {
+            orderBy: { position: "asc" },
             include: {
-              containers: {
-                include: { species: true },
-              },
+              containers: { orderBy: { position: "asc" }, include: { species: true } },
             },
           },
         },
@@ -25,71 +26,73 @@ async function getShelves() {
 
 export default async function ShelvesPage() {
   const shelves = await getShelves();
+  const allContainers = shelves.flatMap((shelf) =>
+    shelf.levels.flatMap((level) => level.trays.flatMap((tray) => tray.containers))
+  );
+  const active = allContainers.filter((container) => !["EMPTY", "HARVESTED"].includes(container.stage)).length;
 
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
+    <div className="page-shell">
+      <header className="page-header">
         <div>
-          <h1 className="font-display text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
-            Стеллажи
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            {shelves.length} стеллажей · управление размещением
+          <div className="page-eyebrow">Размещение</div>
+          <h1 className="page-title">Стеллажи</h1>
+          <p className="page-description">
+            {shelves.length} стеллажей · {allContainers.length} контейнеров · {active} активных посевов
           </p>
         </div>
-        <AddShelfButton />
-      </div>
+        <AddShelfButton variant="primary" />
+      </header>
 
       {shelves.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 rounded-2xl"
-          style={{ background: "var(--card)", border: "1px dashed var(--border)" }}>
-          <Layers size={48} className="mb-4" style={{ color: "var(--text-muted)" }} />
-          <p className="font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
-            Нет стеллажей
-          </p>
-          <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
-            Добавьте первый стеллаж для начала работы
+        <div className="ui-card flex flex-col items-center px-6 py-16 text-center">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{ background: "rgba(135, 189, 156,.1)", color: "var(--green-sprout)" }}>
+            <Layers3 size={25} />
+          </span>
+          <h2 className="font-display text-xl font-bold">Добавьте первый стеллаж</h2>
+          <p className="mb-6 mt-2 max-w-sm text-sm leading-6" style={{ color: "var(--text-muted)" }}>
+            Внутри появятся этажи, подносы и контейнеры для ведения каждого посева.
           </p>
           <AddShelfButton variant="primary" />
         </div>
       ) : (
-        <div className="space-y-4 stagger">
+        <div className="grid gap-4 lg:grid-cols-2">
           {shelves.map((shelf) => {
-            const allContainers = shelf.levels.flatMap((l) =>
-              l.trays.flatMap((t) => t.containers)
+            const containers = shelf.levels.flatMap((level) =>
+              level.trays.flatMap((tray) => tray.containers)
             );
-            const active = allContainers.filter((c) => !["EMPTY", "HARVESTED"].includes(c.stage)).length;
-            const ready = allContainers.filter((c) => c.stage === "READY").length;
-            const total = allContainers.length;
+            const activeCount = containers.filter((container) =>
+              !["EMPTY", "HARVESTED"].includes(container.stage)
+            ).length;
+            const readyCount = containers.filter((container) => container.stage === "READY").length;
+            const occupiedPercent = containers.length
+              ? Math.round((activeCount / containers.length) * 100)
+              : 0;
 
             return (
-              <Link
-                key={shelf.id}
-                href={`/shelves/${shelf.id}`}
-                className="group block p-5 rounded-2xl transition-all hover:scale-[1.01] animate-fade-in"
-                style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-              >
-                <div className="flex items-start justify-between mb-4">
+              <Link key={shelf.id} href={`/shelves/${shelf.id}`}
+                className="ui-card-interactive group overflow-hidden p-5 sm:p-6">
+                <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="font-display text-xl font-semibold mb-0.5" style={{ color: "var(--text-primary)" }}>
+                    <h2 className="font-display text-xl font-bold" style={{ color: "var(--text-primary)" }}>
                       {shelf.name}
                     </h2>
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                      {shelf.levels.length} этажей · {total} контейнеров
+                    <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                      {shelf.levels.length} этажей · {containers.length} контейнеров
                     </p>
                   </div>
-                  <ChevronRight size={18} className="mt-1 transition-transform group-hover:translate-x-1"
-                    style={{ color: "var(--text-muted)" }} />
+                  <span className="ui-icon-button h-9 w-9 border-0 bg-transparent">
+                    <ArrowRight size={17} className="transition-transform group-hover:translate-x-0.5" />
+                  </span>
                 </div>
 
-                {/* Mini shelf preview */}
-                <MiniShelfPreview shelf={shelf} />
+                <ShelfPreview shelf={shelf} />
 
-                {/* Stats */}
-                <div className="flex gap-4 mt-4">
-                  <MiniStat label="Активных" value={active} color="var(--green-sprout)" />
-                  {ready > 0 && <MiniStat label="К сбору" value={ready} color="#FCD34D" urgent />}
-                  <MiniStat label="Всего" value={total} color="var(--text-muted)" />
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  <ShelfMetric label="Занято" value={`${occupiedPercent}%`} />
+                  <ShelfMetric label="Активно" value={activeCount} accent="#87bd9c" />
+                  <ShelfMetric label="К сбору" value={readyCount} accent={readyCount ? "#d4b878" : undefined} />
                 </div>
               </Link>
             );
@@ -100,71 +103,61 @@ export default async function ShelvesPage() {
   );
 }
 
-function MiniShelfPreview({ shelf }: { shelf: Awaited<ReturnType<typeof getShelves>>[0] }) {
-  const stageColors: Record<string, string> = {
-    EMPTY: "#1F2E22",
-    PREPARATION: "#2E1A4A",
-    DARK_PHASE: "#2A1535",
-    LIGHT_PHASE: "#1A3A1A",
-    READY: "#3D3000",
-    HARVESTED: "#0A1409",
+function ShelfPreview({ shelf }: { shelf: Awaited<ReturnType<typeof getShelves>>[number] }) {
+  const colors: Record<string, string> = {
+    EMPTY: "#18231c",
+    PREPARATION: "#39304f",
+    DARK_PHASE: "#45375e",
+    LIGHT_PHASE: "#235033",
+    READY: "#66591f",
+    HARVESTED: "#121a14",
   };
 
   return (
-    <div className="rounded-xl overflow-hidden p-3"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-      <div className="space-y-1.5">
+    <div className="rounded-xl border p-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+      <div className="space-y-2">
         {shelf.levels.map((level) => (
           <div key={level.id} className="flex items-center gap-2">
-            <span className="font-mono text-xs w-4 text-right flex-shrink-0"
-              style={{ color: "var(--text-muted)" }}>
+            <span className="w-4 text-right font-mono text-[10px]" style={{ color: "var(--text-muted)" }}>
               {level.levelNumber}
             </span>
-            <div className="flex gap-1 flex-1">
-              {level.trays.flatMap((tray) =>
-                tray.containers.map((container) => (
-                  <div
-                    key={container.id}
-                    className="flex-1 h-5 rounded"
-                    title={container.species?.name ?? "Свободно"}
-                    style={{
-                      background: stageColors[container.stage] ?? stageColors.EMPTY,
-                      border: container.stage === "READY"
-                        ? "1px solid rgba(252,211,77,0.5)"
-                        : "1px solid rgba(255,255,255,0.04)",
-                    }}
-                  />
-                ))
-              )}
+            <div className="grid flex-1 grid-flow-col auto-cols-fr gap-1">
+              {level.trays.flatMap((tray) => tray.containers).map((container) => (
+                <span key={container.id} className="h-6 rounded-md border"
+                  style={{
+                    background: colors[container.stage] ?? colors.EMPTY,
+                    borderColor: container.stage === "READY" ? "rgba(212, 184, 120,.4)" : "rgba(255,255,255,.035)",
+                  }}
+                  title={container.species?.name ?? "Свободно"}
+                />
+              ))}
             </div>
           </div>
         ))}
       </div>
-      {/* Legend */}
-      <div className="flex gap-3 mt-2 flex-wrap">
-        {[
-          { color: "#1A3A1A", label: "Свет" },
-          { color: "#2A1535", label: "Темнота" },
-          { color: "#3D3000", label: "Готово" },
-        ].map(({ color, label }) => (
-          <div key={label} className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-sm" style={{ background: color }} />
-            <span className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</span>
-          </div>
-        ))}
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+        <Legend color="#235033" label="Свет" />
+        <Legend color="#45375e" label="Темнота" />
+        <Legend color="#66591f" label="Готово" />
       </div>
     </div>
   );
 }
 
-function MiniStat({ label, value, color, urgent }: {
-  label: string; value: number; color: string; urgent?: boolean;
-}) {
+function Legend({ color, label }: { color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1.5">
-      {urgent && <span className="text-xs animate-pulse">⚡</span>}
-      <span className="font-mono text-sm font-bold" style={{ color }}>{value}</span>
-      <span className="text-xs" style={{ color: "var(--text-muted)" }}>{label}</span>
+    <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+      {label}
+    </span>
+  );
+}
+
+function ShelfMetric({ label, value, accent }: { label: string; value: React.ReactNode; accent?: string }) {
+  return (
+    <div>
+      <div className="font-display text-lg font-bold" style={{ color: accent ?? "var(--text-primary)" }}>{value}</div>
+      <div className="mt-0.5 text-[10px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{label}</div>
     </div>
   );
 }

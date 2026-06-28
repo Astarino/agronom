@@ -63,7 +63,7 @@ export function TelegramSettings({ user }: { user: User }) {
         </h2>
         {isConnected && (
           <span className="text-xs px-2 py-0.5 rounded-full"
-            style={{ background: "rgba(74,222,128,0.12)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.25)" }}>
+            style={{ background: "rgba(135, 189, 156,0.12)", color: "var(--green-sprout)", border: "1px solid rgba(135, 189, 156,0.25)" }}>
             Подключён
           </span>
         )}
@@ -72,8 +72,11 @@ export function TelegramSettings({ user }: { user: User }) {
       {/* Connected state */}
       {isConnected && (
         <div className="mb-4 p-3 rounded-xl flex items-center gap-3"
-          style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.18)" }}>
-          <span className="text-2xl">✅</span>
+          style={{ background: "rgba(135, 189, 156,0.06)", border: "1px solid rgba(135, 189, 156,0.18)" }}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg"
+            style={{ background: "rgba(135,189,156,0.14)", color: "var(--green-sprout)" }}>
+            <Check size={18} />
+          </span>
           <div>
             <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
               {user.name ?? "Агроном"}

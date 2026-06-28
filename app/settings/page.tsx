@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
-import { Settings } from "lucide-react";
 import { TelegramSettings } from "@/components/settings/TelegramSettings";
 import { NotifyTimingSettings } from "@/components/settings/NotifyTimingSettings";
 
@@ -12,19 +11,12 @@ export default async function SettingsPage() {
   const user = await getUser();
 
   return (
-    <div className="max-w-xl mx-auto animate-fade-in">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)" }}>
-          <Settings size={18} style={{ color: "var(--green-sprout)" }} />
-        </div>
+    <div className="page-shell max-w-2xl">
+      <div className="page-header">
         <div>
-          <h1 className="font-display text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
-            Настройки
-          </h1>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Telegram бот и уведомления
-          </p>
+          <div className="page-eyebrow">Параметры</div>
+          <h1 className="page-title">Настройки</h1>
+          <p className="page-description">Подключение Telegram и время отправки напоминаний.</p>
         </div>
       </div>
 
@@ -53,7 +45,7 @@ function BotInstructionsCard() {
         ].map(({ n, text }) => (
           <li key={n} className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs font-bold"
-              style={{ background: "rgba(74,222,128,0.15)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.3)" }}>
+              style={{ background: "rgba(135, 189, 156,0.15)", color: "var(--green-sprout)", border: "1px solid rgba(135, 189, 156,0.3)" }}>
               {n}
             </span>
             <p className="text-sm pt-0.5" style={{ color: "var(--text-secondary)" }}>{text}</p>

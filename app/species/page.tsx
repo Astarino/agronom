@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import { Leaf, Plus, Thermometer, Droplets, Clock } from "lucide-react";
+import { Thermometer, Droplets, Clock } from "lucide-react";
 import { AddSpeciesButton } from "@/components/species/AddSpeciesButton";
 
 async function getSpecies() {
@@ -15,28 +15,24 @@ export default async function SpeciesPage() {
   const species = await getSpecies();
 
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
+    <div className="page-shell">
+      <div className="page-header">
         <div>
-          <h1 className="font-display text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
-            Виды растений
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            Инструкции по выращиванию и параметры
-          </p>
+          <div className="page-eyebrow">Справочник</div>
+          <h1 className="page-title">Виды растений</h1>
+          <p className="page-description">Нормы посева, режимы выращивания и пошаговые инструкции.</p>
         </div>
         <AddSpeciesButton />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {species.map((s) => {
           const steps = JSON.parse(s.steps) as Array<{ step: number; title: string }>;
           return (
             <Link
               key={s.id}
               href={`/species/${s.id}`}
-              className="group p-5 rounded-2xl transition-all hover:scale-[1.02] animate-fade-in"
-              style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+              className="ui-card-interactive group p-5"
             >
               {/* Color strip + name */}
               <div className="flex items-start gap-3 mb-4">
@@ -45,7 +41,7 @@ export default async function SpeciesPage() {
                   style={{ background: s.color, opacity: 0.8 }}
                 />
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-display text-lg font-semibold leading-tight"
+                  <h2 className="font-display text-lg font-bold leading-tight"
                     style={{ color: "var(--text-primary)" }}>
                     {s.name}
                   </h2>

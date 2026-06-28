@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
-import { Bell, Clock, CheckCircle2, X } from "lucide-react";
+import { Bell, Clock, CheckCircle2, Smartphone } from "lucide-react";
 import { NotificationsList } from "@/components/notifications/NotificationsList";
 import { formatDate } from "@/lib/utils";
 
@@ -30,33 +30,30 @@ export default async function NotificationsPage() {
   const sent = notifications.filter((n) => n.sentAt);
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)" }}>
-          <Bell size={18} style={{ color: "var(--green-sprout)" }} />
-        </div>
+    <div className="page-shell max-w-3xl">
+      <div className="page-header">
         <div>
-          <h1 className="font-display text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
-            Уведомления
-          </h1>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Telegram бот отправляет напоминания
-          </p>
+          <div className="page-eyebrow">План действий</div>
+          <h1 className="page-title">Уведомления</h1>
+          <p className="page-description">Напоминания о поливе, свете, переносе и сборе урожая.</p>
         </div>
       </div>
 
       {/* Telegram status */}
-      <div className="p-4 rounded-2xl mb-6"
+      <div className="mb-6 rounded-2xl border p-4"
         style={{
           background: user?.telegramChatId
-            ? "rgba(74,222,128,0.08)"
+            ? "rgba(135, 189, 156,0.08)"
             : "rgba(249,115,22,0.08)",
-          border: `1px solid ${user?.telegramChatId ? "rgba(74,222,128,0.25)" : "rgba(249,115,22,0.25)"}`,
+          border: `1px solid ${user?.telegramChatId ? "rgba(135, 189, 156,0.25)" : "rgba(249,115,22,0.25)"}`,
         }}>
         <div className="flex items-center gap-3">
-          <div className="text-2xl">
-            {user?.telegramChatId ? "✅" : "📱"}
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{
+              background: user?.telegramChatId ? "rgba(135,189,156,0.14)" : "rgba(249,115,22,0.14)",
+              color: user?.telegramChatId ? "var(--green-sprout)" : "#e0975a",
+            }}>
+            {user?.telegramChatId ? <CheckCircle2 size={20} /> : <Smartphone size={20} />}
           </div>
           <div>
             <p className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>

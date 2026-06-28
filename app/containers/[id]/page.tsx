@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Droplets, Sun, Moon, Scissors, Clock } from "lucide-react";
+import { ArrowLeft, Droplets, Sun, Moon, Scissors, Clock, Sprout } from "lucide-react";
 import { STAGE_LABELS, STAGE_GLOW, GrowthStage, daysSince, formatDate, formatRelative } from "@/lib/utils";
 
 async function getContainer(id: string) {
@@ -28,8 +28,8 @@ export default async function ContainerDetailPage({ params }: { params: Promise<
   const levelNum = container.tray.level.levelNumber;
 
   const stageColors: Record<GrowthStage, string> = {
-    EMPTY: "#4A6B4E", PREPARATION: "#A78BFA", DARK_PHASE: "#C4B5FD",
-    LIGHT_PHASE: "#4ADE80", READY: "#FCD34D", HARVESTED: "#4A6B4E",
+    EMPTY: "#4A6B4E", PREPARATION: "#9a93b8", DARK_PHASE: "#aaa4c4",
+    LIGHT_PHASE: "#87bd9c", READY: "#e0c98a", HARVESTED: "#4A6B4E",
   };
   const stageColor = stageColors[stage];
 
@@ -86,16 +86,16 @@ export default async function ContainerDetailPage({ params }: { params: Promise<
         {/* Timeline */}
         <div className="grid grid-cols-2 gap-3 text-xs">
           {container.plantedAt && (
-            <TimelineItem icon="🌱" label="Посеяно" date={container.plantedAt} />
+            <TimelineItem icon={<Sprout size={14} style={{ color: "#87bd9c" }} />} label="Посеяно" date={container.plantedAt} />
           )}
           {container.darkPhaseStarted && (
-            <TimelineItem icon="🌑" label="Тёмная фаза" date={container.darkPhaseStarted} />
+            <TimelineItem icon={<Moon size={14} style={{ color: "#aaa4c4" }} />} label="Тёмная фаза" date={container.darkPhaseStarted} />
           )}
           {container.lightPhaseStarted && (
-            <TimelineItem icon="☀️" label="Под светом" date={container.lightPhaseStarted} />
+            <TimelineItem icon={<Sun size={14} style={{ color: "#e0c98a" }} />} label="Под светом" date={container.lightPhaseStarted} />
           )}
           {container.harvestedAt && (
-            <TimelineItem icon="✂️" label="Собрано" date={container.harvestedAt} />
+            <TimelineItem icon={<Scissors size={14} style={{ color: "var(--text-muted)" }} />} label="Собрано" date={container.harvestedAt} />
           )}
         </div>
       </div>
@@ -175,10 +175,10 @@ function getProgress(stage: GrowthStage): number {
   return { EMPTY: 0, PREPARATION: 15, DARK_PHASE: 40, LIGHT_PHASE: 70, READY: 95, HARVESTED: 100 }[stage] ?? 0;
 }
 
-function TimelineItem({ icon, label, date }: { icon: string; label: string; date: Date }) {
+function TimelineItem({ icon, label, date }: { icon: React.ReactNode; label: string; date: Date }) {
   return (
     <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "var(--surface)" }}>
-      <span className="text-sm">{icon}</span>
+      <span className="flex items-center">{icon}</span>
       <div>
         <p className="font-medium" style={{ color: "var(--text-secondary)" }}>{label}</p>
         <p style={{ color: "var(--text-muted)" }}>{formatDate(date)}</p>

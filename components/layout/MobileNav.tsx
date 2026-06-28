@@ -2,30 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Layers, Leaf, Archive, Settings } from "lucide-react";
+import { LayoutDashboard, Layers, Leaf, Archive, Bell } from "lucide-react";
 
 const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Главная" },
   { href: "/shelves", icon: Layers, label: "Стеллажи" },
   { href: "/species", icon: Leaf, label: "Виды" },
   { href: "/history", icon: Archive, label: "История" },
-  { href: "/settings", icon: Settings, label: "Настройки" },
+  { href: "/notifications", icon: Bell, label: "Задачи" },
 ];
 
 export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 flex items-center justify-around px-1 py-2"
-      style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
+    <nav className="glass safe-bottom fixed inset-x-0 bottom-0 z-50 flex items-center justify-around px-1 pt-2 lg:hidden"
+      style={{ borderWidth: "1px 0 0" }} aria-label="Мобильная навигация">
       {navItems.map(({ href, icon: Icon, label }) => {
         const active = pathname === href || (href !== "/" && pathname.startsWith(href));
         return (
           <Link key={href} href={href}
-            className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-all"
-            style={{ color: active ? "var(--green-sprout)" : "var(--text-muted)" }}>
-            <Icon style={{ width: 20, height: 20 }} />
-            <span className="text-[10px] font-medium">{label}</span>
+            className="relative flex min-w-[60px] flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-colors"
+            style={{
+              color: active ? "var(--green-sprout)" : "var(--text-muted)",
+              background: active ? "rgba(135, 189, 156,0.08)" : "transparent",
+            }}>
+            <Icon size={19} />
+            <span className="text-[10px] font-semibold">{label}</span>
           </Link>
         );
       })}

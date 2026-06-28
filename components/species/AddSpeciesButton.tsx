@@ -15,7 +15,7 @@ export function AddSpeciesButton({ asCard = false }: { asCard?: boolean }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    name: "", variety: "", color: "#4ADE80",
+    name: "", variety: "", color: "#87bd9c",
     seedAmount: "10", soakHours: "",
     pressWeight: "1000",
     darkDaysMin: "2", darkDaysMax: "3",
@@ -69,7 +69,7 @@ export function AddSpeciesButton({ asCard = false }: { asCard?: boolean }) {
 
   const trigger = asCard ? (
     <button onClick={() => setOpen(true)}
-      className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all hover:border-green-500/40 hover:bg-green-500/5 min-h-[160px]"
+      className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all hover:border-[color:var(--border-light)] hover:bg-white/[0.03] min-h-[160px]"
       style={{ borderColor: "var(--border)" }}>
       <Plus size={24} style={{ color: "var(--text-muted)" }} />
       <span className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>Добавить вид</span>
@@ -77,7 +77,7 @@ export function AddSpeciesButton({ asCard = false }: { asCard?: boolean }) {
   ) : (
     <button onClick={() => setOpen(true)}
       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-      style={{ background: "rgba(74,222,128,0.1)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.3)" }}>
+      style={{ background: "rgba(135, 189, 156,0.1)", color: "var(--green-sprout)", border: "1px solid rgba(135, 189, 156,0.3)" }}>
       <Plus size={16} /> Новый вид
     </button>
   );
@@ -133,7 +133,7 @@ export function AddSpeciesButton({ asCard = false }: { asCard?: boolean }) {
                 * Шаги инструкции можно отредактировать после создания
               </p>
               <button type="submit" disabled={loading || !form.name}
-                className="w-full py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+                className="w-full py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
                 style={{ background: "var(--green-sprout)", color: "#0A1409" }}>
                 {loading ? "Сохранение..." : "Добавить вид"}
               </button>

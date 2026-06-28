@@ -34,12 +34,7 @@ export function AddShelfButton({ variant = "secondary" }: { variant?: "primary" 
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-90"
-        style={
-          variant === "primary"
-            ? { background: "var(--green-sprout)", color: "#0A1409" }
-            : { background: "rgba(74,222,128,0.1)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.3)" }
-        }
+        className={variant === "primary" ? "ui-button-primary" : "ui-button-secondary"}
       >
         <Plus size={16} />
         Добавить стеллаж
@@ -47,16 +42,13 @@ export function AddShelfButton({ variant = "secondary" }: { variant?: "primary" 
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(7,15,9,0.85)", backdropFilter: "blur(8px)" }}>
-          <div className="w-full max-w-sm rounded-2xl p-6 animate-sprout"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          style={{ background: "rgba(5,10,7,0.78)", backdropFilter: "blur(12px)" }}>
+          <div className="ui-card w-full max-w-sm p-6 animate-sprout">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
                 Новый стеллаж
               </h2>
-              <button onClick={() => setOpen(false)}
-                className="p-1 rounded-lg transition-colors hover:bg-white/5"
-                style={{ color: "var(--text-muted)" }}>
+              <button onClick={() => setOpen(false)} className="ui-icon-button h-8 w-8">
                 <X size={18} />
               </button>
             </div>
@@ -92,8 +84,8 @@ export function AddShelfButton({ variant = "secondary" }: { variant?: "primary" 
                       onClick={() => setLevels(n)}
                       className="flex-1 py-2 rounded-xl text-sm font-medium transition-all"
                       style={{
-                        background: levels === n ? "rgba(74,222,128,0.15)" : "var(--surface)",
-                        border: levels === n ? "1px solid rgba(74,222,128,0.4)" : "1px solid var(--border)",
+                        background: levels === n ? "rgba(135, 189, 156,0.15)" : "var(--surface)",
+                        border: levels === n ? "1px solid rgba(135, 189, 156,0.4)" : "1px solid var(--border)",
                         color: levels === n ? "var(--green-sprout)" : "var(--text-secondary)",
                       }}
                     >
@@ -106,8 +98,7 @@ export function AddShelfButton({ variant = "secondary" }: { variant?: "primary" 
               <button
                 type="submit"
                 disabled={loading || !name.trim()}
-                className="w-full py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
-                style={{ background: "var(--green-sprout)", color: "#0A1409" }}
+                className="ui-button-primary w-full disabled:opacity-50"
               >
                 {loading ? "Создание..." : "Создать стеллаж"}
               </button>

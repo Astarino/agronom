@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDate } from "@/lib/utils";
-import { Bell, X, CheckCircle2 } from "lucide-react";
+import { Bell, X, CheckCircle2, Droplets, Sun, Moon, Sprout, Scissors, ClipboardList, type LucideIcon } from "lucide-react";
 
 type NotifItem = {
   id: string;
@@ -16,9 +16,13 @@ type NotifItem = {
   } | null;
 };
 
-const TYPE_ICONS: Record<string, string> = {
-  WATERING: "💧", LIGHT_ON: "☀️", LIGHT_OFF: "🌙",
-  MOVE_TO_LIGHT: "🌱", HARVEST_READY: "🌿", CUSTOM: "📋",
+const TYPE_ICONS: Record<string, { icon: LucideIcon; color: string }> = {
+  WATERING: { icon: Droplets, color: "#87bd9c" },
+  LIGHT_ON: { icon: Sun, color: "#e0c98a" },
+  LIGHT_OFF: { icon: Moon, color: "#aaa4c4" },
+  MOVE_TO_LIGHT: { icon: Sprout, color: "#87bd9c" },
+  HARVEST_READY: { icon: Scissors, color: "#e0c98a" },
+  CUSTOM: { icon: ClipboardList, color: "var(--text-muted)" },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -38,7 +42,8 @@ export function NotificationsList({ notifications, type }: {
   return (
     <div className="space-y-2">
       {notifications.map((n) => {
-        const icon = TYPE_ICONS[n.type] ?? "🔔";
+        const meta = TYPE_ICONS[n.type] ?? { icon: Bell, color: "var(--text-muted)" };
+        const Icon = meta.icon;
         const label = TYPE_LABELS[n.type] ?? n.type;
         const isSent = !!n.sentAt;
 
@@ -50,7 +55,10 @@ export function NotificationsList({ notifications, type }: {
               border: "1px solid var(--border)",
               opacity: isSent ? 0.65 : 1,
             }}>
-            <span className="text-xl flex-shrink-0 mt-0.5">{icon}</span>
+            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
+              style={{ background: "var(--surface)", color: meta.color }}>
+              <Icon size={16} />
+            </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-xs font-medium px-1.5 py-0.5 rounded-md"
@@ -84,7 +92,7 @@ export function NotificationsList({ notifications, type }: {
               </button>
             )}
             {isSent && (
-              <CheckCircle2 size={16} className="flex-shrink-0 mt-1" style={{ color: "#4ADE80" }} />
+              <CheckCircle2 size={16} className="flex-shrink-0 mt-1" style={{ color: "#87bd9c" }} />
             )}
           </div>
         );

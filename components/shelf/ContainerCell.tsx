@@ -1,6 +1,8 @@
 "use client";
 
 import { differenceInDays } from "date-fns";
+import { Check } from "lucide-react";
+import { PlantGlyph, glyphForSpecies, isGlyphKey, type GlyphKey } from "@/components/icons/PlantGlyph";
 
 type ContainerData = {
   id: string;
@@ -12,36 +14,27 @@ type ContainerData = {
   lightPhaseStarted: Date | null;
 };
 
-const STAGE_STYLES: Record<string, { bg: string; border: string; shadow: string }> = {
-  EMPTY:       { bg: "#0C1610", border: "rgba(28,48,32,0.5)", shadow: "none" },
-  PREPARATION: { bg: "#18133A", border: "rgba(124,58,237,0.35)", shadow: "0 0 14px rgba(124,58,237,0.18)" },
-  DARK_PHASE:  { bg: "#1A1230", border: "rgba(139,92,246,0.4)",  shadow: "0 0 18px rgba(139,92,246,0.22)" },
-  LIGHT_PHASE: { bg: "#0D2914", border: "rgba(74,222,128,0.35)", shadow: "0 0 18px rgba(74,222,128,0.18)" },
-  READY:       { bg: "#2A2200", border: "rgba(252,211,77,0.55)", shadow: "0 0 22px rgba(252,211,77,0.3)"  },
-  HARVESTED:   { bg: "#080F09", border: "rgba(28,48,32,0.25)",  shadow: "none" },
+const STAGE_STYLES: Record<string, { bg: string; border: string; shadow: string; ink: string }> = {
+  EMPTY:       { bg: "#1a1c18", border: "rgba(58,60,54,.7)",     shadow: "none", ink: "var(--text-muted)" },
+  PREPARATION: { bg: "#232136", border: "rgba(163, 158, 192,.3)", shadow: "none", ink: "#bdb8d6" },
+  DARK_PHASE:  { bg: "#242137", border: "rgba(170, 164, 196,.32)", shadow: "none", ink: "#c6c1dc" },
+  LIGHT_PHASE: { bg: "#1c2c22", border: "rgba(135, 189, 156,.3)",  shadow: "none", ink: "#9bcfae" },
+  READY:       { bg: "#2a2618", border: "rgba(212, 184, 120,.45)", shadow: "0 0 0 1px rgba(212, 184, 120,.08)", ink: "#e0c98a" },
+  HARVESTED:   { bg: "#181a16", border: "rgba(58,60,54,.4)",      shadow: "none", ink: "var(--text-muted)" },
 };
 
-// Дефолтный emoji по виду если не задан вручную
-function defaultEmoji(speciesName: string | undefined, stage: string): string {
-  if (stage === "EMPTY") return "";
-  if (stage === "HARVESTED") return "✂️";
-  if (stage === "READY") return "🌿";
-  if (!speciesName) return "🌱";
-
-  const name = speciesName.toLowerCase();
-  if (name.includes("горох") || name.includes("pea")) return "🫛";
-  if (name.includes("редис") || name.includes("radish")) return "🌸";
-  if (name.includes("подсолнух") || name.includes("sunflower")) return "🌻";
-  if (name.includes("кукуруза") || name.includes("corn")) return "🌽";
-  if (name.includes("базилик") || name.includes("basil")) return "🌿";
-  if (name.includes("капуст") || name.includes("cabbage")) return "🥬";
-  if (name.includes("руккол") || name.includes("rocket")) return "🍃";
-  return "🌱";
+// Default glyph for a container's marker (manual override stored as a glyph key).
+function resolveGlyph(emoji: string | null, speciesName: string | undefined, stage: string): GlyphKey {
+  if (stage === "HARVESTED") return "scissors";
+  if (isGlyphKey(emoji)) return emoji;
+  return glyphForSpecies(speciesName);
 }
 
-export function ContainerCell({ container, onClick }: {
+export function ContainerCell({ container, onClick, selectionMode = false, selected = false }: {
   container: ContainerData;
   onClick: () => void;
+  selectionMode?: boolean;
+  selected?: boolean;
 }) {
   const style = STAGE_STYLES[container.stage] ?? STAGE_STYLES.EMPTY;
   const days = container.plantedAt
@@ -52,18 +45,25 @@ export function ContainerCell({ container, onClick }: {
   const isEmpty = container.stage === "EMPTY";
   const isHarvested = container.stage === "HARVESTED";
 
-  const emoji = container.emoji || defaultEmoji(container.species?.name, container.stage);
+  const glyph = resolveGlyph(container.emoji, container.species?.name, container.stage);
 
   return (
     <button
       onClick={onClick}
-      title={container.species?.name ?? "Свободно"}
-      className="relative aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all hover:scale-105 hover:brightness-110 focus:outline-none"
+      title={selectionMode && !isEmpty ? "Занятый контейнер нельзя выбрать" : container.species?.name ?? "Свободно"}
+      aria-label={selectionMode
+        ? `${selected ? "Убрать из выбора" : "Выбрать"} свободный контейнер ${container.position}`
+        : `${container.species?.name ?? "Свободный контейнер"}, позиция ${container.position}`}
+      aria-pressed={selectionMode ? selected : undefined}
+      disabled={selectionMode && !isEmpty}
+      data-testid={`container-cell-${container.id}`}
+      data-container-id={container.id}
+      data-container-selected={selected ? "true" : "false"}
+      className="relative aspect-square min-h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all hover:-translate-y-0.5 hover:brightness-110 focus:outline-none motion-reduce:hover:translate-y-0 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0"
       style={{
-        background: style.bg,
-        border: `1px solid ${style.border}`,
-        boxShadow: style.shadow,
-        animation: isReady ? "pulse 2s ease-in-out infinite" : undefined,
+        background: selected ? "rgba(135, 189, 156,.16)" : style.bg,
+        border: selected ? "2px solid var(--green-sprout)" : `1px solid ${style.border}`,
+        boxShadow: selected ? "0 0 0 3px rgba(135, 189, 156,.1)" : style.shadow,
       }}
     >
       {/* Species color dot — top left */}
@@ -72,16 +72,17 @@ export function ContainerCell({ container, onClick }: {
           style={{ background: container.species.color, opacity: 0.85 }} />
       )}
 
-      {/* Emoji */}
+      {/* Plant glyph */}
       {!isEmpty && !isHarvested && (
-        <span className="text-sm leading-none select-none"
-          style={{ filter: isReady ? "drop-shadow(0 0 4px rgba(252,211,77,0.8))" : undefined }}>
-          {emoji}
+        <span className="leading-none" style={{ color: style.ink }}>
+          <PlantGlyph name={glyph} size={18} strokeWidth={1.5} />
         </span>
       )}
 
       {isHarvested && (
-        <span className="text-xs leading-none select-none opacity-40">{emoji}</span>
+        <span className="leading-none opacity-35" style={{ color: style.ink }}>
+          <PlantGlyph name={glyph} size={15} strokeWidth={1.5} />
+        </span>
       )}
 
       {/* Day counter */}
@@ -89,7 +90,7 @@ export function ContainerCell({ container, onClick }: {
         <span className="font-mono leading-none select-none"
           style={{
             fontSize: "10px",
-            color: isReady ? "#FCD34D" : "rgba(255,255,255,0.35)",
+            color: isReady ? "#e0c98a" : "rgba(255,255,255,0.35)",
           }}>
           {days}д
         </span>
@@ -97,12 +98,20 @@ export function ContainerCell({ container, onClick }: {
 
       {/* Empty: plus hint */}
       {isEmpty && (
-        <span style={{ fontSize: 16, opacity: 0.15, color: "var(--text-muted)" }}>+</span>
+        selected ? (
+          <span className="flex h-6 w-6 items-center justify-center rounded-full"
+            style={{ background: "var(--green-sprout)", color: "#08110b" }}>
+            <Check size={14} strokeWidth={3} />
+          </span>
+        ) : (
+          <span style={{ fontSize: 16, opacity: selectionMode ? 0.55 : 0.15, color: "var(--text-muted)" }}>
+            {selectionMode ? "○" : "+"}
+          </span>
+        )
       )}
 
-      {/* Ready pulse ring */}
       {isReady && (
-        <span className="absolute inset-[-2px] rounded-xl border border-amber-400/40 animate-ping pointer-events-none" />
+        <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#d9c08a]" />
       )}
     </button>
   );

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { X, Droplets, ClipboardList, ChevronRight, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Droplets, ClipboardList, ChevronRight, Trash2, Sprout, Moon, Sun } from "lucide-react";
 import { STAGE_LABELS, GrowthStage, daysSince, formatDate } from "@/lib/utils";
-import { EmojiPicker } from "./EmojiPicker";
+import { IconPicker } from "./IconPicker";
 import Link from "next/link";
 
 type Species = { id: string; name: string; color: string; variety: string | null };
@@ -24,8 +24,8 @@ const STAGE_NEXT_LABEL: Partial<Record<GrowthStage, string>> = {
 };
 
 const STAGE_ACCENT: Record<string, string> = {
-  EMPTY: "#4A6B4E", PREPARATION: "#A78BFA", DARK_PHASE: "#C4B5FD",
-  LIGHT_PHASE: "#4ADE80", READY: "#FCD34D", HARVESTED: "#4A6B4E",
+  EMPTY: "#4A6B4E", PREPARATION: "#9a93b8", DARK_PHASE: "#aaa4c4",
+  LIGHT_PHASE: "#87bd9c", READY: "#e0c98a", HARVESTED: "#4A6B4E",
 };
 
 export function ContainerModal({ container, species, shelfName, onClose, onUpdate }: {
@@ -125,7 +125,7 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
         <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: "var(--border)" }}>
           {/* Emoji pick inline */}
           {stage !== "EMPTY" && (
-            <EmojiPicker value={emoji} onChange={setEmoji} />
+            <IconPicker value={emoji} onChange={setEmoji} />
           )}
           <div className="flex-1 min-w-0">
             <div className="font-semibold truncate" style={{ color: "var(--text-primary)" }}>
@@ -187,9 +187,9 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
               {stage === "EMPTY" && selectedSpecies && (
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-secondary)" }}>
-                    Эмодзи контейнера
+                    Иконка контейнера
                   </label>
-                  <EmojiPicker value={emoji} onChange={setEmoji} />
+                  <IconPicker value={emoji} onChange={setEmoji} />
                 </div>
               )}
 
@@ -224,9 +224,9 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
               {container.plantedAt && (
                 <div className="rounded-xl p-3 space-y-1.5"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-                  {container.plantedAt && <DateRow icon="🌱" label="Посеяно" date={container.plantedAt} />}
-                  {container.darkPhaseStarted && <DateRow icon="🌑" label="Тёмная фаза" date={container.darkPhaseStarted} />}
-                  {container.lightPhaseStarted && <DateRow icon="☀️" label="Под светом" date={container.lightPhaseStarted} />}
+                  {container.plantedAt && <DateRow icon={<Sprout size={13} style={{ color: "#87bd9c" }} />} label="Посеяно" date={container.plantedAt} />}
+                  {container.darkPhaseStarted && <DateRow icon={<Moon size={13} style={{ color: "#aaa4c4" }} />} label="Тёмная фаза" date={container.darkPhaseStarted} />}
+                  {container.lightPhaseStarted && <DateRow icon={<Sun size={13} style={{ color: "#e0c98a" }} />} label="Под светом" date={container.lightPhaseStarted} />}
                 </div>
               )}
 
@@ -234,7 +234,7 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
               {container.species && (
                 <Link href={`/species/${container.species.id}`} onClick={onClose}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-colors hover:bg-white/5"
-                  style={{ color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.18)" }}>
+                  style={{ color: "var(--green-sprout)", border: "1px solid rgba(135, 189, 156,0.18)" }}>
                   <ClipboardList size={12} />
                   Инструкция: {container.species.name}
                   <ChevronRight size={12} className="ml-auto" />
@@ -251,7 +251,7 @@ export function ContainerModal({ container, species, shelfName, onClose, onUpdat
             {!["EMPTY", "HARVESTED"].includes(stage) && (
               <button onClick={logWatering}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium"
-                style={{ background: "rgba(74,222,128,0.08)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                style={{ background: "rgba(135, 189, 156,0.08)", color: "var(--green-sprout)", border: "1px solid rgba(135, 189, 156,0.2)" }}>
                 <Droplets size={12} /> Полив
               </button>
             )}
@@ -300,10 +300,10 @@ function toDateTimeLocal(date: Date) {
   return local.toISOString().slice(0, 16);
 }
 
-function DateRow({ icon, label, date }: { icon: string; label: string; date: Date }) {
+function DateRow({ icon, label, date }: { icon: React.ReactNode; label: string; date: Date }) {
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span>{icon}</span>
+      <span className="flex items-center">{icon}</span>
       <span style={{ color: "var(--text-muted)" }}>{label}:</span>
       <span className="font-mono" style={{ color: "var(--text-secondary)" }}>{formatDate(date)}</span>
     </div>
@@ -312,9 +312,34 @@ function DateRow({ icon, label, date }: { icon: string; label: string; date: Dat
 
 function LogTab({ containerId }: { containerId: string }) {
   const [logs, setLogs] = useState<Array<{ id: string; action: string; createdAt: Date; notes: string | null }> | null>(null);
+  const [error, setError] = useState(false);
 
+  useEffect(() => {
+    let active = true;
+    setLogs(null);
+    setError(false);
+
+    fetch(`/api/containers/${containerId}/log`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to load logs");
+        return response.json();
+      })
+      .then((data) => {
+        if (active) setLogs(data);
+      })
+      .catch(() => {
+        if (active) setError(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [containerId]);
+
+  if (error) {
+    return <p className="py-4 text-center text-xs" style={{ color: "var(--danger)" }}>Не удалось загрузить журнал</p>;
+  }
   if (!logs) {
-    fetch(`/api/containers/${containerId}/log`).then((r) => r.json()).then(setLogs);
     return <p className="text-xs text-center py-4" style={{ color: "var(--text-muted)" }}>Загрузка...</p>;
   }
   if (logs.length === 0) {

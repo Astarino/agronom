@@ -28,7 +28,7 @@ export function NotifyTimingSettings({ user }: { user: User }) {
   return (
     <div className="p-5 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
       <div className="flex items-center gap-3 mb-5">
-        <Bell size={18} style={{ color: "#FCD34D" }} />
+        <Bell size={18} style={{ color: "#e0c98a" }} />
         <h2 className="font-display text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
           Время уведомлений
         </h2>
@@ -41,8 +41,8 @@ export function NotifyTimingSettings({ user }: { user: User }) {
             onClick={() => setSelected(opt.value)}
             className="w-full flex items-start gap-3 p-3 rounded-xl text-left transition-all"
             style={{
-              background: selected === opt.value ? "rgba(74,222,128,0.08)" : "var(--surface)",
-              border: selected === opt.value ? "1px solid rgba(74,222,128,0.3)" : "1px solid var(--border)",
+              background: selected === opt.value ? "rgba(135, 189, 156,0.08)" : "var(--surface)",
+              border: selected === opt.value ? "1px solid rgba(135, 189, 156,0.3)" : "1px solid var(--border)",
             }}>
             <div
               className="w-4 h-4 rounded-full border-2 mt-0.5 flex-shrink-0 flex items-center justify-center"
@@ -63,7 +63,7 @@ export function NotifyTimingSettings({ user }: { user: User }) {
       <button
         onClick={save}
         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium"
-        style={{ background: "rgba(74,222,128,0.1)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.3)" }}>
+        style={{ background: "rgba(135, 189, 156,0.1)", color: "var(--green-sprout)", border: "1px solid rgba(135, 189, 156,0.3)" }}>
         {saved ? <><Check size={14} /> Сохранено</> : "Сохранить настройку"}
       </button>
     </div>

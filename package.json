@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma db push && next build",
+    "build": "node --env-file-if-exists=.env.local ./node_modules/prisma/build/index.js db push && next build",
     "start": "next start",
     "lint": "next lint",
-    "db:push": "prisma db push",
-    "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
-    "db:studio": "prisma studio",
+    "db:push": "node --env-file=.env.local ./node_modules/prisma/build/index.js db push",
+    "db:seed": "node --env-file=.env.local ./node_modules/ts-node/dist/bin.js --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
+    "db:studio": "node --env-file=.env.local ./node_modules/prisma/build/index.js studio",
     "postinstall": "prisma generate"
   },
   "dependencies": {

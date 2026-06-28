@@ -9,7 +9,7 @@ export default function LoginPage() {
       {/* Logo */}
       <div className="flex flex-col items-center mb-10">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-          style={{ background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.3)" }}>
+          style={{ background: "rgba(135, 189, 156,0.12)", border: "1px solid rgba(135, 189, 156,0.3)" }}>
           <Sprout size={32} style={{ color: "var(--green-sprout)" }} />
         </div>
         <h1 className="font-display text-3xl font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
@@ -47,7 +47,7 @@ export default function LoginPage() {
         ].map(({ n, text }) => (
           <div key={n} className="flex items-center gap-3">
             <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-              style={{ background: "rgba(74,222,128,0.12)", color: "var(--green-sprout)", border: "1px solid rgba(74,222,128,0.25)" }}>
+              style={{ background: "rgba(135, 189, 156,0.12)", color: "var(--green-sprout)", border: "1px solid rgba(135, 189, 156,0.25)" }}>
               {n}
             </span>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{text}</p>

@@ -40,20 +40,21 @@ export default async function HistoryPage() {
   const topSpecies = Object.entries(speciesCounts).sort((a, b) => b[1] - a[1])[0];
 
   return (
-    <div className="max-w-5xl mx-auto animate-fade-in">
-      <div className="mb-8">
-        <h1 className="font-display text-3xl md:text-4xl font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-          История посевов
-        </h1>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+    <div className="page-shell">
+      <div className="page-header">
+        <div>
+        <div className="page-eyebrow">Аналитика</div>
+        <h1 className="page-title">История посевов</h1>
+        <p className="page-description">
           Завершённые циклы сохраняются при очистке, удалении контейнера, подноса или этажа.
         </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         <StatCard icon={<Archive size={18} />} label="В истории" value={history.length} color="var(--green-sprout)" />
-        <StatCard icon={<Sprout size={18} />} label="Активных" value={active.length} color="#A78BFA" />
-        <StatCard icon={<Clock size={18} />} label="Средний цикл" value={averageDays ? `${averageDays} д` : "—"} color="#FCD34D" />
+        <StatCard icon={<Sprout size={18} />} label="Активных" value={active.length} color="#9a93b8" />
+        <StatCard icon={<Clock size={18} />} label="Средний цикл" value={averageDays ? `${averageDays} д` : "—"} color="#e0c98a" />
         <StatCard icon={<CalendarDays size={18} />} label="Чаще всего" value={topSpecies?.[0] ?? "—"} color="#60A5FA" />
       </div>
 
